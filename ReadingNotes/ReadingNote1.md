@@ -1,8 +1,8 @@
 
 
-
+Reading Note for Modern Operating Systems
+===
    * Chapter 1.1
-   * 
       * two main function of OS: extending the machine & managing resources
       * extending machine
       * 
