@@ -10,6 +10,9 @@ chapter 4
 - 4.4 Thread data structure and life circle
 	- TCB: thread control Block
 	- It holds two 
+- 4.5 thread life-cycle
+	- Init->ready->running->finish. 
+	- Running -> waiting -> ready
 - 4.6 Implementing 
 
 Chapter 5
@@ -158,3 +161,19 @@ Polling based wait: busy waiting, not good.
 							}
 							mtx.unlock();
 						}
+						
+	- 5.7 Implementing synchronization objects  
+	We have two lock:
+		- For uniprocessor: Disabling interrupts: on a single processor, we can make a sequence of instructions atomic by disabling interrupts on that single processor
+		- Atomic read-modify-write instructions: On a multiprocessor, disabling interrupts is insufficient to provide atomicity. Instead, architectures provide special instructions to atomically read and update a word of memory. These instructions are globally atomic with respect to the instructions on every processor. 
+		- 5.7.1 implementing uniprocessor locks by disabling interrupts
+			- This implementation does provide the mutual exclusion property. 
+			- busy waiting: No response if the lock is not released
+			- Works well in kernel, however would be problematic for user
+		- 5.7.2 Implementing uniprocessor Queueing locks
+			- If a lock is BUSY when a thread tries to acquire it, the thread moves its TCB onto the lock's waiting list. The thread then suspends itself and switches to the next runnable thread. 
+			- Thread systems enforce the invariant that a thread always disables interrupts before performing a context switch. 
+			- What happen if we released the lock's spin lock before the call to put to waiting queue. 
+				- Another thread may call release the lock and make current thread on ready list which make it both on waiting and on ready list.- Care is needed to prevent a waiting thread from being put back on the ready list until it has completed its context switch
+		- 5.7.6 implementing condition variables: Similar to lock. One attention: if lock can pass, we then can implement cv by using a self-contended lock
+		
