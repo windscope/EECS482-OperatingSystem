@@ -199,5 +199,120 @@ Chapter 6
 			- Serializability
 			- Easy to implemented
 		- Cons: 
-			- Dedlock
+			- Deadlock
+			
+- 6.5 deadlock
+	- A deadlock is a  cycle of waiting among a set of threads, where each thread waits for some other thread in the cycle to take some action. 
+	- Deadlock can occur anytime a thread waits for an event that cannot happen because of a cycle of waiting for a resource held by the first thread. 
+		- Resource can be: Locks, memory, processing time, disck blocks, or space in a buffer. 
+	- Examples
+		- Mutually recursive locking
+			- A: lock1.lock(); lock2.lock(); B: lock2.lock(); lock1.lock();//this is a n=2 dining philosophy problem
+		- Nested waiting
+			- Since wait can only release one lock, then when two lock is holding and another thread is waiting two or more lock, then it cannot proceed. 
+			- Waiting buffer(special case of nested waiting)
+			- Chopstick(Dining philosophy)
+	- 6.5.1 Deadlock v.s. Starvation
+		- Deadlock and starvation are both liveness concerns. 
+			- In starvation, a thread fails take progress for an indefinite period of time. 
+			- Deadlock is a form of starvation but with the stronger condition: a group of threads forms a cycle whee none of the threads make progress because each thread is waiting for some other thread in the cycle to take actions. 
+		- Differences 
+			- Deadlock-> starvation; Starvation \-> deadlock
+			- The most important different is that deadlock is a cycle of waiting , whereas starvation is not. 
+		- Deadlock and Starvation's subjection issue
+			- Might be scheduler, 
+	- 6.5.2 Necessary conditions for deadlock  
+		4 conditions: 
+		- __(1) Bounded(limited) resources__
+			- There are finite number of threads that can simultaneously use a resource(others must wait or locked. )
+		- __(2) No preemption__ 
+			- Once a thread acquires a resource its ownership cannot be revoked until the thread acts to release it. 
+		- __(3) Wait while holding__
+			- A thread holds one resource while waiting for another. 
+			- A.K.A: multiple independent requests 
+			- It occurs when a thread first acquires one resource and then tries to acquire another. 
+		- __(4) Circular waiting__:
+			- There is a set of waiting threads such that each thread is waiting for a resource held by another. 
+	Explanations:
+		- Eliminate any of these following four condition can make solve the deadlock issue.   
+		- However, these 4 deadlock conditions are _necessary_ of deadlock but not _sufficient_ . e.g. new resources may be generated while executing. 
+	- 6.5.3 Preventing deadlock
+		- 3 ways of overcoming deadlock
+			1. Exploit or limit the behavior of the program. 
+				- change the behavior of a program to prevent one of the four necessary conditions for deadlock
+			2. Predict the future
+				- If we can know what threads may or will do, then we can avoid deadlock by having threads wait before they would head into a possible deadlock
+			3. Detect and recover
+				- Another alternative is to allow threads to recover or 'undo' actions that take a system into a deadlock. 
+		- Breaking the 4 necessary conditions
+			1. Bounded resources: Provide sufficient resources
+				- One way to ensure deadlock freedom is to arrange for sufficient resources to satisfy all threads' demand. 1. e.g.: add a single chopstick to the middle of the table in Dining philosophers. 
+			2. No preemption:  Preempt resources
+				- Allow the runtime system to forcibly reclaim resources held by a thread. 
+				- For example. an operating system can preempt a page of memory from a running process by copying it to disk in order to prevent applications from deadlocking as they acquire memory pages. 
+			3. Wait while holding: Release lock when calling out of module
+				- For nested modules, each of which has its own lock, waiting on a condition variable in a inner module can lead to a nested waiting deadlock.
+					- Solution: restructure a module's code so that no locks are held when calling other modules. 
+					- For example, we can change the code on the left to the code on the right, provided that the program does not depend on the three steps occurring atomically. 
+							
+							left:
+							Module::foo(){
+								mtx.lock();
+								doSomeStuff();
+								otherModule->bar();
+								mtx.unlock();
+							}
+							
+							Module::doSomeStuff(){
+								x = x+1;	
+							}
+							
+							right:
+							Module::foo(){		
+								doSomeStuff();
+								otherModule->bar();
+							}
+							
+							Module::doSomeStuff(){
+								mtx.lock();	
+								x = x+1;	
+								mtx.unlock();
+							}
+							
+				- Circular waiting: lock ordering. 
+					- Identify an ordering among locks and only acquire locks in that oder. Especially useful for _mutually recursive waiting_.
+
+	- The Banker's Algorithm for Avoiding Deadlock
+		- Acquire-all/ release all. 
+			- A general technique to eliminate __wait-while-holding__ condition is to wait until all need resources are available and then to acquire them atomically at the beginning of an operation, rather than incrementally as the operation proceeds. 
+			- A thread may not know exactly which resources it will need to complete its work, but it can still acquire all resources that it might need. 
+			- Disadvantages: 
+				1. The effect on program modularity,
+				2.  The challenge of having applications accurately estimate their worst-case needs
+				3. The  cost of allocating significantly more resources than may be necessary in the common case. 	
+		- Banker's Algorithm
+			- __General introduction__: A thread states its maximum resource requirements when it begins a task, but it then acquires and release this resource incrementally as the task runs. The runtime system delays granting some requests to ensure that the system never deadlocks. 
+			- __Insight__: A thread may deadlock will not necessarily do so: for some interleaving of requests it will deadlock, but for others it will not.  Delaying the resources requests that leads to deadlock, a system can avoid interleaving that could lead to deadlocks. 
+			- __3 state of a deadlock-prone system__:
+				- in a __safety state__: For any possible sequence of resource requests, there is at least one _safe sequence_ of processing the requests that eventually success in granting all pending and future requests. 
+				- In an __unsafe state__: There is at least one sequence of future resource requests that leads to deadlock no matter what processing order is tried. 
+				- In a __deadlocked state__: the system has at least one deadlock. 
+			- __Banker's Algorithms's explanation with 3 states__: 
+				- Banker's algorithm is to make the system remains in a safe state. 
+				- It delays any request that takes the system from a safe to an unsafe state. 
+				- 2 reason: 
+					1. A system in a safe state controls its own destiny: for any workload, it can avoid deadlock by relying the processing of some requests. 
+					2. Once a system enters an unsafe state, it cannot prevent deadlocking. 
+			- __Steps to check the safety: __
+				1. A state is safe if some sequence of thread executions allows each thread to obtain its maximum resource need, finish its work, and release its resources. 
+				2. check if the currently free resources suffice to allow any thread to finish. 
+				3. We see if the currently free resources plus any resources held by the thread identified in the first step suffice to allow any other thread to finish
+				4. We continue this process until we have identified all threads guaranteed to finish, provided we serve requests in a particular order. 
+				5. If 4 is finished, then the thread is true.  
+			
+		
+		
+		
+			
+		
 		
