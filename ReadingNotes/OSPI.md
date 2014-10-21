@@ -176,4 +176,28 @@ Polling based wait: busy waiting, not good.
 			- What happen if we released the lock's spin lock before the call to put to waiting queue. 
 				- Another thread may call release the lock and make current thread on ready list which make it both on waiting and on ready list.- Care is needed to prevent a waiting thread from being put back on the ready list until it has completed its context switch
 		- 5.7.6 implementing condition variables: Similar to lock. One attention: if lock can pass, we then can implement cv by using a self-contended lock
+
+Chapter 6
+---
+- 6.4 Multi-object Atomicity  
+	- 6.4.1: careful class design
+		- decide the atomicity range of the method is crucial. Many functionality need not to be atomic could make the design simple.
+	- 6.4.2: Acquire-all/release-all
+		- Better interface design has limits. Multiple locks are needed for greater concurrency or just for the functionality. Multi-locked method principles: Acquire-All/Release-All
+		- __(1) Acquire-All/Release-All__ : to acquire every lock that may be needed at any point while processing the entire set of operation in the request. Then, once the thread has all of the locks it might need, the thread can execute the request and finally release all locks. 
+		- Pros: 
+			- Acquire all/release-all allows significant concurrency, When individual requests touch non-overlapping subsets of state protected by different locks, they can proceed in parallel. 
+			- Acquire-all/release-all make parallel operation can always express as series operation. __Serializability__.
+		- Cons
+			- Hard to know what exactly locks will be needed by a request before beginning to process it. 
+				- potential Solution: conservatively acquire more locks than needed. 
+	- __(2) Two-phase locking__
+		- two phase locking refines the acquire-all/release-all pattern to address the  issue of unknown the locks need to have.
+		- Locks are adding as needed, and then unlock at the end of the method.  
+		- Pros: 
+			- Better concurrency. 
+			- Serializability
+			- Easy to implemented
+		- Cons: 
+			- Dedlock
 		
