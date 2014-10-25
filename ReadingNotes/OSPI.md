@@ -44,7 +44,7 @@ Polling based wait: busy waiting, not good.
 				- Add ```while(...) {cv.wait()}``` loop into each method that identified as potentially needing to wait before returning. 
 			5. Add signal and broadcast calls
 				- Appropriate for signal when:
-					1. At most one waiting rethread can make progress
+					1. At most one waiting thread can make progress
 					2. Any thread waiting on the condition variable can make progress
 				- Appropriate for broadcast when:
 					1. Multiple waiting threads may all be able to make progress
@@ -308,9 +308,18 @@ Chapter 6
 				2. check if the currently free resources suffice to allow any thread to finish. 
 				3. We see if the currently free resources plus any resources held by the thread identified in the first step suffice to allow any other thread to finish
 				4. We continue this process until we have identified all threads guaranteed to finish, provided we serve requests in a particular order. 
-				5. If 4 is finished, then the thread is true.  
-			
-		
+				5. If 4 is finished, then it is in safe state. 			
+				
+Address Translation
+---
+- General introduction
+	Benefits of Address translation
+	- __Process isolation__: Protecting operating system kernel and other applications against buggy or malicious code requires the ability to limit memory references by applications
+	- __Interprocess communication__: Often processes need to coordinate with each other, and an efficient way to do that is to have the processes share a common memory region. 
+	- __Shared code segments__: Instances of the same program can shared the programs instructions, reducing therir memory footprint and making the processor cache more efficient. 
+	- __program initialization__
+	- __Efficient dynamic memory allocation__
+	- Cache management. 
 		
 		
 			
